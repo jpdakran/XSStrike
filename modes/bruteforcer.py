@@ -5,6 +5,7 @@ from core.colors import good, green, end
 from core.requester import requester
 from core.utils import getUrl, getParams
 from core.log import setup_logger
+from core.browserEngine import browser_engine, kill_browser, init_browser
 
 logger = setup_logger(__name__)
 
@@ -20,6 +21,10 @@ def bruteforcer(target, paramData, payloadList, encoding, headers, delay, timeou
     if not params:
         logger.error('No parameters to test.')
         quit()
+
+    # initialize browser
+    init_browser()
+
     for paramName in params.keys():
         progress = 1
         paramsCopy = copy.deepcopy(params)
@@ -34,6 +39,13 @@ def bruteforcer(target, paramData, payloadList, encoding, headers, delay, timeou
             if encoding:
                 payload = encoding(payload)
             if payload in response:
-                logger.info('%s %s' % (good, payload))
+                success = browser_engine(response)
+                if success:
+                    logger.good('%s : payload found in response - alert found' % payload)
+                    kill_browser()
+                    quit()
+                else:
+                    logger.info('%s : payload found in response - false positive' % payload)
             progress += 1
     logger.no_format('')
+    kill_browser()
