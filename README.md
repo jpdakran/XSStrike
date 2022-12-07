@@ -59,6 +59,9 @@ Apart from that, XSStrike has crawling, fuzzing, parameter discovery, WAF detect
 - Bruteforce payloads from a file
 - Powered by [Photon](https://github.com/s0md3v/Photon), [Zetanize](https://github.com/s0md3v/zetanize) and [Arjun](https://github.com/s0md3v/Arjun)
 - Payload Encoding
+- False positive detection
+  - For the choosen browser, Selenium needs a direver to interface (Ex : firefox - geckodriver)
+	- download & put the binary in venv/bin from https://github.com/SeleniumHQ/selenium/blob/trunk/py/docs/source/index.rst#drivers
 
 ### Documentation
 - [Usage](https://github.com/s0md3v/XSStrike/wiki/Usage)

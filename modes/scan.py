@@ -14,6 +14,7 @@ from core.requester import requester
 from core.utils import getUrl, getParams, getVar
 from core.wafDetector import wafDetector
 from core.log import setup_logger
+from core.browserEngine import browser_engine, kill_browser, init_browser
 
 logger = setup_logger(__name__)
 
@@ -30,6 +31,9 @@ def scan(target, paramData, encoding, headers, delay, timeout, skipDOM, skip):
             target = 'http://' + target
     logger.debug('Scan target: {}'.format(target))
     response = requester(target, {}, headers, GET, delay, timeout).text
+
+    # initialize browser
+    init_browser()
 
     if not skipDOM:
         logger.run('Checking for DOM vulnerabilities')
@@ -96,25 +100,11 @@ def scan(target, paramData, encoding, headers, delay, timeout, skipDOM, skip):
                 logger.run('Progress: %i/%i\r' % (progress, total))
                 if not GET:
                     vect = unquote(vect)
-                efficiencies = checker(
-                    url, paramsCopy, headers, GET, delay, vect, positions, timeout, encoding)
-                if not efficiencies:
-                    for i in range(len(occurences)):
-                        efficiencies.append(0)
-                bestEfficiency = max(efficiencies)
-                if bestEfficiency == 100 or (vect[0] == '\\' and bestEfficiency >= 95):
-                    logger.red_line()
-                    logger.good('Payload: %s' % loggerVector)
-                    logger.info('Efficiency: %i' % bestEfficiency)
-                    logger.info('Confidence: %i' % confidence)
-                    if not skip:
-                        choice = input(
-                            '%s Would you like to continue scanning? [y/N] ' % que).lower()
-                        if choice != 'y':
-                            quit()
-                elif bestEfficiency > minEfficiency:
-                    logger.red_line()
-                    logger.good('Payload: %s' % loggerVector)
-                    logger.info('Efficiency: %i' % bestEfficiency)
-                    logger.info('Confidence: %i' % confidence)
+                response = requester(url, paramsCopy, headers, GET, delay, timeout).text
+                success = browser_engine(response)
+                if success:
+                    logger.good('%s : payload found in response - alert found' % vect)
+                    kill_browser()
+                    quit()
         logger.no_format('')
+    kill_browser()
