@@ -14,7 +14,7 @@ from core.requester import requester
 from core.utils import getUrl, getParams, getVar
 from core.wafDetector import wafDetector
 from core.log import setup_logger
-from core.browserEngine import browser_engine, kill_browser, init_browser
+from core.browserEngine import validate_alert
 
 logger = setup_logger(__name__)
 
@@ -31,9 +31,6 @@ def scan(target, paramData, encoding, headers, delay, timeout, skipDOM, skip):
             target = 'http://' + target
     logger.debug('Scan target: {}'.format(target))
     response = requester(target, {}, headers, GET, delay, timeout).text
-
-    # initialize browser
-    init_browser()
 
     if not skipDOM:
         logger.run('Checking for DOM vulnerabilities')
@@ -101,10 +98,8 @@ def scan(target, paramData, encoding, headers, delay, timeout, skipDOM, skip):
                 if not GET:
                     vect = unquote(vect)
                 response = requester(url, paramsCopy, headers, GET, delay, timeout).text
-                success = browser_engine(response)
+                success = validate_alert(response)
                 if success:
                     logger.good('%s : payload found in response - alert found' % vect)
-                    kill_browser()
                     quit()
         logger.no_format('')
-    kill_browser()
